@@ -96,7 +96,7 @@ for index, item in enumerate(property_items, start=1):
     ).text.strip()
     size = item.find_element(
         By.CSS_SELECTOR,
-        "li.illustrated-features__item.illustrated-features__item--surface-area",
+        "li[class='illustrated-features__item illustrated-features__item--surface-area']",
     ).text.strip()
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
