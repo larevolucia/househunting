@@ -94,11 +94,16 @@ for index, item in enumerate(property_items, start=1):
     price = item.find_element(
         By.CSS_SELECTOR, "div[class='listing-search-item__price']"
     ).text.strip()
+    size = item.find_element(
+        By.CSS_SELECTOR,
+        "li.illustrated-features__item.illustrated-features__item--surface-area",
+    ).text.strip()
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     listed_properties[index] = {
         "address": address,
         "URL": url_suffix,
+        "size": size,
         "price": price,
         "timestamp": timestamp,
     }
