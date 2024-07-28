@@ -151,7 +151,7 @@ if not new_listings.empty:
 
     # Prepare email content
     NEW_SUBJECT = "New Property Listings Added"
-    new_body = f"Added {len(new_listings)} new listings to the Google Sheet.\n\nhttps://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit?gid=0#gid=0"
+    new_body = f"Added {len(new_listings)} new listings to the Google Sheet.\n\nhttps://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit?gid=0#gid=0"  # pylint: disable=line-too-long
 
     # Send email notification
     send_email(NEW_SUBJECT, new_body)
