@@ -63,3 +63,11 @@ Google will display a 16-character app-specific password. Copy this password.
 ### Update Your .env File:
 
 Use the app-specific password in your .env file instead of your main Gmail password.
+
+## PythonAnywhere
+
+The `main.py` document was created to be run locally. Later I created an account at PythonAnywhere to run the code hourly.
+
+In order to do that, it is required to install dependencies directly at PythonAnywhere bash console.
+Since Selenium is not fully supported I had to change the code to used pyppeteer and BeautifulSoup instead.
+For that it was also needed to download and install chrome via the terminal.
