@@ -46,3 +46,20 @@ A JSON file containing your service account key will be downloaded to your compu
 ## Share Google Sheet with your Project
 
 Go to your google sheet and click on share. Share it with the client_email of your project.
+
+## Set up App-Specific password
+
+### Enable Two-Factor Authentication:
+
+Ensure that two-factor authentication (2FA) is enabled on your Google account. You can enable it by visiting the Google Account Security page and following the instructions to set up 2FA.
+
+### Generate App-Specific Password:
+
+Go to the Google App Passwords page. You might need to sign in and complete 2FA.
+Under "Select the app and device you want to generate the app password for," select "Mail" as the app and "Other" as the device. You can name it something like "Python Script".
+Click "Generate".
+Google will display a 16-character app-specific password. Copy this password.
+
+### Update Your .env File:
+
+Use the app-specific password in your .env file instead of your main Gmail password.

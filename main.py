@@ -2,6 +2,9 @@
  Pararius.nl according to specific parameters"""
 
 from datetime import datetime
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import os
 from dotenv import load_dotenv
 from selenium import webdriver
@@ -11,6 +14,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import gspread
 from google.oauth2.service_account import Credentials
 import pandas as pd
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -26,6 +30,12 @@ SERVICE_ACCOUNT_FILE = (
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 SHEET_NAME = "Listings"
 
+# Email configuration
+SMTP_SERVER = os.environ.get("SMTP_SERVER")
+SMTP_PORT = os.environ.get("SMTP_PORT")
+EMAIL_USERNAME = os.environ.get("EMAIL_USERNAME")
+EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
+EMAIL_RECIPIENT = os.environ.get("EMAIL_RECIPIENT")
 
 # Authenticate and initialize the Google Sheets client
 creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
@@ -105,19 +115,50 @@ new_listings = new_listings_df[
     ~new_listings_df["URL"].isin(existing_listings_df["URL"])
 ]
 
+
+# Function to send an email
+def send_email(subject, body):
+    """sending email notification"""
+    msg = MIMEMultipart()
+    msg["From"] = EMAIL_USERNAME
+    msg["To"] = EMAIL_RECIPIENT
+    msg["Subject"] = subject
+
+    msg.attach(MIMEText(body, "plain"))
+
+    server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+    server.starttls()
+    server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
+    text = msg.as_string()
+    server.sendmail(EMAIL_USERNAME, EMAIL_RECIPIENT, text)
+    server.quit()
+
+
 # Append new listings to the existing DataFrame and update the Google Sheet
 if not new_listings.empty:
     updated_listings_df = pd.concat(
         [existing_listings_df, new_listings], ignore_index=True
     )
+
     # Fill NaN values with an empty string
     updated_listings_df = updated_listings_df.fillna("")
+
     # Update the Google Sheet
     sheet.update(
         [updated_listings_df.columns.values.tolist()]
         + updated_listings_df.values.tolist()
     )
-    print(f"Added {len(new_listings)} new listings to the Google Sheet.")
+
+    # Prepare email content
+    NEW_SUBJECT = "New Property Listings Added"
+    new_body = f"Added {len(new_listings)} new listings to the Google Sheet.\n\nhttps://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit?gid=0#gid=0"
+
+    # Send email notification
+    send_email(NEW_SUBJECT, new_body)
+
+    print(
+        f"Added {len(new_listings)} new listings to the Google Sheet and sent an email notification."  # pylint: disable=line-too-long
+    )
 else:
     print("No new listings found.")
 
