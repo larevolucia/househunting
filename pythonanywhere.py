@@ -102,6 +102,10 @@ async def main():
         )["href"]
         url_prefix = "https://www.pararius.nl"
         full_url = url_prefix + url_suffix
+        size_element = item.select_one(
+            "li[class='illustrated-features__item illustrated-features__item--surface-area']"
+        )
+        size = size_element.get_text(strip=True) if size_element else "N/A"
         price = item.select_one("div[class='listing-search-item__price']").get_text(
             strip=True
         )
@@ -111,6 +115,7 @@ async def main():
         listed_properties[index] = {
             "address": address,
             "URL": full_url,
+            "size": size,
             "price": price,
             "timestamp": timestamp,
         }
