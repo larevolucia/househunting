@@ -66,7 +66,7 @@ async def scrape():
     """asyn function to open browser and scrap data"""
     browser = await launch(
         headless=True,
-        executablePath="/home/revolucia/chromium/chrome",
+        executablePath="chrome-win/chrome-win/chrome.exe",
         args=["--no-sandbox", "--disable-setuid-sandbox"],
     )
     page = await browser.newPage()
