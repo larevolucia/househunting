@@ -61,6 +61,7 @@ VBO_URL = "https://www.vbo.nl/koopwoningen?q=Amsterdam&straal=&koopprijs_van=&ko
 PARARIUS_URL = (
     "https://www.pararius.nl/koopwoningen/amsterdam/0-500000/2-slaapkamers/50m2/sinds-3"
 )
+HUISLIJN_URL = "https://www.huislijn.nl/koopwoning/nederland/noord-holland?order=relevance&c-houseFrom=-3&c-maxPrice=450000&c-livingArea=49&c-nrRooms=2&c-municipality=Amsterdam"
 
 
 # Function to scrape the website using pyppeteer
@@ -95,6 +96,30 @@ async def scrape_vbo():
     return content
 
 
+# Function to scrape the website using pyppeteer
+async def scrape_huislijn():
+    """asyn function to open browser and scrap data"""
+    browser = await launch(
+        headless=True,
+        # path will need to be changed in Python Anywhere
+        executablePath="chrome-win/chrome-win/chrome.exe",
+        args=["--no-sandbox", "--disable-setuid-sandbox"],
+    )
+    page = await browser.newPage()
+    await page.goto(HUISLIJN_URL)
+    # Increase the timeout and wait for the necessary element to load
+    try:
+        await page.waitForSelector("div.wrapper-objects", timeout=30000)
+    except Exception as e:
+        print(f"Error waiting for selector: {e}")
+        await page.screenshot({"path": "error_screenshot.png"})
+        await browser.close()
+        return None
+    content = await page.content()
+    await browser.close()
+    return content
+
+
 # Function to send an email
 def send_email(subject, body):
     """sending email notification"""
@@ -118,9 +143,9 @@ def send_email(subject, body):
 
 async def main():
     """scrape both sites, combine results, register and send notification"""
-    # Scrape both websites concurrently
-    pararius_html_content, vbo_html_content = await asyncio.gather(
-        scrape_pararius(), scrape_vbo()
+    # Scrape websites concurrently
+    pararius_html_content, vbo_html_content, huislijn_html_content = (
+        await asyncio.gather(scrape_pararius(), scrape_vbo(), scrape_huislijn())
     )
 
     # Parse Pararius HTML content
@@ -182,8 +207,34 @@ async def main():
             "timestamp": timestamp,
         }
 
-    # Combine both property dictionaries into a single DataFrame
-    combined_properties = {**pararius_properties, **vbo_properties}
+    # Parse Huislijn HTML content
+    huislijn_soup = BeautifulSoup(huislijn_html_content, "html.parser")
+    huislijn_properties = {}
+    huislijn_items = huislijn_soup.select("div[class='object-panel']")
+
+    # Iterate over each property item and extract the required details
+    for index, item in enumerate(huislijn_items, start=1):
+        url_prefix = "https://www.huislijn.nl/"
+        url_suffix = item.find("a")["href"]
+        full_url = url_prefix + url_suffix
+        address = item.find("h2", class_="object-street").text.strip()
+        price = item.find("div", class_="object-price").text.strip()
+        # # Format the time as a timestamp
+        timestamp = AMSTERDAM_TIME.strftime("%Y-%m-%d %H:%M:%S")
+
+        huislijn_properties[index] = {
+            "address": address,
+            "URL": full_url,
+            "price": price,
+            "timestamp": timestamp,
+        }
+
+    # Combine property dictionaries into a single DataFrame
+    combined_properties = {
+        **pararius_properties,
+        **vbo_properties,
+        **huislijn_properties,
+    }
     new_listings_df = pd.DataFrame.from_dict(combined_properties, orient="index")
 
     # Load the existing listings from the Google Sheet
