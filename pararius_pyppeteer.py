@@ -1,4 +1,4 @@
-"""This script aims to scrap properties listed at Pararius.nl according to specific parameters"""
+"""Web scrapes properties listed, add to google sheet and send email"""
 
 from datetime import datetime
 import smtplib
